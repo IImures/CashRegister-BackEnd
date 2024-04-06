@@ -1,0 +1,22 @@
+spring:
+    application:
+        name: cashregister
+    datasource:
+        url: jdbc:postgresql://localhost:5432/cash_registerdb
+        username: postgres
+        password: postgres
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        open-in-view: true
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+          hibernate:
+              format_sql: true
+
+application:
+    security:
+        jwt:
+            secret-key: E6E7E7D8C1CC9F4E6A63B6E976145E6E7E7D8C1CC9F4E6A63B6E976145
+
