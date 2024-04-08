@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.*;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +36,11 @@ public class Security{
                                         .requestMatchers("/api/v1/user/register").permitAll()
                                         .requestMatchers("/api/v1/user/authenticate").permitAll()
                                         .requestMatchers("/error").permitAll()
-                                        //.requestMatchers("/login").permitAll()
+                                        .requestMatchers("api/v1/types/**").permitAll()
+                                        .requestMatchers(POST,"api/v1/items/").hasRole("ADMIN")
+                                        .requestMatchers(DELETE, "api/v1/items/**").hasRole("ADMIN")
+                                        .requestMatchers(GET,"api/v1/items/**").permitAll()
+                                        .requestMatchers(GET,"api/v1/items").permitAll()
                                         .anyRequest().authenticated()
 //                                        .anyRequest().permitAll()
 ////                                        .requestMatchers("/account").hasRole("USER")

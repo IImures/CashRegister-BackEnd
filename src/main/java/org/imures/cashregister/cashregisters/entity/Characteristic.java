@@ -19,7 +19,7 @@ public class Characteristic {
     private String value;
 
     @ManyToOne
-    @JoinColumn(name = "cash_register_id")
-    private CashRegister cashRegister;
+    @JoinColumn(name = "item_id")
+    private Item item;
 
 }
