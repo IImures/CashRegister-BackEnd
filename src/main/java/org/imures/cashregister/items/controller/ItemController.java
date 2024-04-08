@@ -1,11 +1,9 @@
-package org.imures.cashregister.cashregisters.controller;
+package org.imures.cashregister.items.controller;
 
-import jakarta.annotation.security.RolesAllowed;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.imures.cashregister.cashregisters.controller.request.ItemRequest;
-import org.imures.cashregister.cashregisters.controller.response.ItemResponse;
-import org.imures.cashregister.cashregisters.service.ItemService;
+import org.imures.cashregister.items.controller.request.ItemRequest;
+import org.imures.cashregister.items.controller.response.ItemResponse;
+import org.imures.cashregister.items.service.ItemService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
