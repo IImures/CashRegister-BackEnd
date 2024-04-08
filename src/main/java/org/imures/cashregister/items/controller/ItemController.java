@@ -1,9 +1,9 @@
-package org.imures.cashregister.Items.controller;
+package org.imures.cashregister.items.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.imures.cashregister.Items.controller.request.ItemRequest;
-import org.imures.cashregister.Items.controller.response.ItemResponse;
-import org.imures.cashregister.Items.service.ItemService;
+import org.imures.cashregister.items.controller.request.ItemRequest;
+import org.imures.cashregister.items.controller.response.ItemResponse;
+import org.imures.cashregister.items.service.ItemService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

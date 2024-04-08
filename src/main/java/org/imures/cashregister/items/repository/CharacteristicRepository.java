@@ -1,6 +1,6 @@
-package org.imures.cashregister.Items.repository;
+package org.imures.cashregister.items.repository;
 
-import org.imures.cashregister.Items.entity.Characteristic;
+import org.imures.cashregister.items.entity.Characteristic;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CharacteristicRepository extends JpaRepository<Characteristic, Long> {

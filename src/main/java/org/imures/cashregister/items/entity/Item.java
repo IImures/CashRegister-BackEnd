@@ -1,4 +1,4 @@
-package org.imures.cashregister.Items.entity;
+package org.imures.cashregister.items.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,8 +1,8 @@
-package org.imures.cashregister.Items.controller.response;
+package org.imures.cashregister.items.controller.response;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.imures.cashregister.Items.entity.Characteristic;
+import org.imures.cashregister.items.entity.Characteristic;
 import org.imures.cashregister.type.controller.reponse.TypeResponse;
 
 import java.util.HashMap;
