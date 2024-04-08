@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5" >
+<head>
+    <title>Items</title>
+</head>
+<body>
+
+<div sec:authorize="hasRole('ADMIN')">
+    This content is only shown to administrators.
+</div>
+<div sec:authorize="hasRole('USER')">
+    This content is only shown to users.
+</div>
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>General Info</th>
+        <th>Description</th>
+        <th>Characteristics</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${items}">
+        <td th:text="${item.name}"></td>
+        <td th:text="${item.type}"></td>
+        <td th:text="${item.generalInfo}"></td>
+        <td th:text="${item.description}"></td>
+        <td th:each="entry : ${item.characteristics}">
+            <span th:text="${entry.key}"></span>: <span th:text="${entry.value}"></span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
