@@ -5,5 +5,5 @@ create table roles
     primary key (id)
 );
 
-INSERT INTO roles(id, authority) VALUES (1,'ADMIN');
-INSERT INTO roles(id, authority) VALUES (2,'USER');
+INSERT INTO roles(id, authority) VALUES (1,'ROLE_ADMIN');
+INSERT INTO roles(id, authority) VALUES (2,'ROLE_USER');
