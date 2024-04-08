@@ -1,10 +1,7 @@
 package org.imures.cashregister.type.controller;
 
 
-import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
-import org.imures.cashregister.cashregisters.controller.request.ItemRequest;
-import org.imures.cashregister.cashregisters.controller.response.ItemResponse;
 import org.imures.cashregister.type.controller.reponse.TypeResponse;
 import org.imures.cashregister.type.controller.request.TypeRequest;
 import org.imures.cashregister.type.service.TypeService;
@@ -14,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 

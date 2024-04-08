@@ -3,7 +3,7 @@ package org.imures.cashregister.type.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.imures.cashregister.cashregisters.entity.Item;
+import org.imures.cashregister.Items.entity.Item;
 
 import java.util.Set;
 

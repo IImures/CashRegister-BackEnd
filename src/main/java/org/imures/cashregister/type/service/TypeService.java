@@ -1,8 +1,6 @@
 package org.imures.cashregister.type.service;
 
 import lombok.RequiredArgsConstructor;
-import org.imures.cashregister.cashregisters.controller.response.ItemResponse;
-import org.imures.cashregister.cashregisters.entity.Item;
 import org.imures.cashregister.type.controller.reponse.TypeResponse;
 import org.imures.cashregister.type.controller.request.TypeRequest;
 import org.imures.cashregister.type.entity.Type;

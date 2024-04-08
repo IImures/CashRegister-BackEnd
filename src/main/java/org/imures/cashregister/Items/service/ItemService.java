@@ -1,14 +1,12 @@
-package org.imures.cashregister.cashregisters.service;
+package org.imures.cashregister.Items.service;
 
 import lombok.RequiredArgsConstructor;
-import org.imures.cashregister.cashregisters.controller.ItemController;
-import org.imures.cashregister.cashregisters.controller.request.ItemRequest;
-import org.imures.cashregister.cashregisters.controller.response.ItemResponse;
-import org.imures.cashregister.cashregisters.entity.Characteristic;
-import org.imures.cashregister.cashregisters.entity.Item;
-import org.imures.cashregister.cashregisters.mapper.ItemMapper;
-import org.imures.cashregister.cashregisters.repository.ItemRepository;
-import org.imures.cashregister.type.controller.reponse.TypeResponse;
+import org.imures.cashregister.Items.controller.request.ItemRequest;
+import org.imures.cashregister.Items.controller.response.ItemResponse;
+import org.imures.cashregister.Items.entity.Characteristic;
+import org.imures.cashregister.Items.entity.Item;
+import org.imures.cashregister.Items.mapper.ItemMapper;
+import org.imures.cashregister.Items.repository.ItemRepository;
 import org.imures.cashregister.type.entity.Type;
 import org.imures.cashregister.type.repositroy.TypeRepository;
 import org.springframework.beans.BeanUtils;
@@ -16,9 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
