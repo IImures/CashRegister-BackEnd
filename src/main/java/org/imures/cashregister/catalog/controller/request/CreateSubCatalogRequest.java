@@ -7,9 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SubCatalogRequest {
+public class CreateSubCatalogRequest {
     @NotBlank(message = "Sub Catalog Name cant be blank")
     private String subCatalogName;
-    @NotNull(message = "Catalog type is missing")
+    @NotNull(message = "Sub Catalog type is missing")
     private Long subCatalogType;
+    @NotNull(message = "Catalog id cant be null")
+    private Long catalogId;
 }
