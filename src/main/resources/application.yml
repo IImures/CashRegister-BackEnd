@@ -2,7 +2,7 @@ spring:
     application:
         name: cashregister
     datasource:
-        url: jdbc:postgresql://localhost:5432/cash_registerdb
+        url: jdbc:postgresql://localhost:5432/cash_register
         username: postgres
         password: postgres
         driver-class-name: org.postgresql.Driver

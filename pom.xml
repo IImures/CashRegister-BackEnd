@@ -14,11 +14,12 @@
     <name>cashregister</name>
     <description>cashregister</description>
     <properties>
-        <lombok.version>1.18.20</lombok.version>
+        <lombok.version>${project.lombok.version}</lombok.version>
         <java.version>17</java.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <flyway-maven-plugin.version>9.22.2</flyway-maven-plugin.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <project.lombok.version>1.18.30</project.lombok.version>
     </properties>
     <dependencies>
         <dependency>
@@ -129,7 +130,7 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>${flyway-maven-plugin.version}</version>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:5432/cash_registerdb</url>
+                    <url>jdbc:postgresql://localhost:5432/cash_register</url>
                     <user>postgres</user>
                     <password>postgres</password>
                     <cleanDisabled>false</cleanDisabled>
