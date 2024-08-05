@@ -11,7 +11,6 @@ import org.imures.cashregister.catalog.entity.SubCatalogTypeEntity;
 import org.imures.cashregister.catalog.mapper.CatalogMapper;
 import org.imures.cashregister.catalog.mapper.SubCatalogMapper;
 import org.imures.cashregister.catalog.repository.CatalogRepository;
-import org.imures.cashregister.catalog.repository.SubCatalogRepository;
 import org.imures.cashregister.catalog.repository.SubCatalogTypeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +48,8 @@ public class CatalogService
         return response;
     }
 
-    public CatalogResponse getCatalogById(int catalogId) {
+    @Transactional(readOnly = true)
+    public CatalogResponse getCatalogById(long catalogId) {
         CatalogEntity catalogEntity = catalogRepository.findById(catalogId)
                 .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
 
@@ -99,7 +99,8 @@ public class CatalogService
     }
 
 
-    public void deleteCatalog(int catalogId) {
+    @Transactional
+    public void deleteCatalog(long catalogId) {
         CatalogEntity catalog = catalogRepository.findById(catalogId)
                 .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
 

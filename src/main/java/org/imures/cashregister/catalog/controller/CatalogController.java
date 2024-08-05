@@ -51,7 +51,7 @@ public class CatalogController
     }
 
     @GetMapping(path = "/{catalogId}")
-    public ResponseEntity<CatalogResponse> getCatalog(@PathVariable int catalogId)
+    public ResponseEntity<CatalogResponse> getCatalog(@PathVariable long catalogId)
     {
         return new ResponseEntity<>(catalogService.getCatalogById(catalogId), HttpStatus.OK);
     }
@@ -67,7 +67,7 @@ public class CatalogController
 
     @DeleteMapping(path= "/{catalogId}")
     public ResponseEntity<Void> deleteCatalog(
-            @PathVariable int catalogId
+            @PathVariable long catalogId
     ){
         catalogService.deleteCatalog(catalogId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
