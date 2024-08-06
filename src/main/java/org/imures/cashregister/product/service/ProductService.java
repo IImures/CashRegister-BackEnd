@@ -15,11 +15,11 @@ import org.imures.cashregister.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +32,7 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final SubCatalogRepository subCatalogRepository;
 
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
@@ -42,6 +43,7 @@ public class ProductService {
         return productResponse;
     }
 
+    @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
         SubCatalog subCatalog = subCatalogRepository.findById(productRequest.getSubCatalogId())
                 .orElseThrow(()-> new EntityNotFoundException("SubCatalog with id " + productRequest.getSubCatalogId() + " not found"));
@@ -58,13 +60,26 @@ public class ProductService {
         return productResponse;
     }
 
+    @Transactional
     public ProductResponse addProductImage(MultipartFile image, Long productId) throws IOException {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
 
-        Optional<ProductImage> optional=productImageRepository.findByNameAndType(image.getOriginalFilename(),image.getContentType());
-        if (optional.isPresent()){
-            product.setImage(optional.get());
+//        Optional<ProductImage> optional=productImageRepository.findByNameAndType(image.getOriginalFilename(),image.getContentType());
+        if (product.getImage() != null){
+            ProductImage toDelete = product.getImage();
+
+            ProductImage imageData = (
+                    ProductImage.builder()
+                            .name(image.getName())
+                            .type(image.getContentType())
+                            .imageData(image.getBytes())
+                            .product(product)
+                            .build()
+            );
+            product.setImage(imageData);
+
+            productImageRepository.delete(toDelete);
         }else{
             ProductImage imageData = (
                     ProductImage.builder()
@@ -84,6 +99,7 @@ public class ProductService {
         return productResponse;
     }
 
+    @Transactional(readOnly = true)
     public byte[] getImageBytes(Long productId) {
         Product product=productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
@@ -101,6 +117,7 @@ public class ProductService {
         productRepository.delete(product);
     }
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> findAll(Pageable pageRequest) {
         Page<Product> productPage = productRepository.findAll(pageRequest);
 
