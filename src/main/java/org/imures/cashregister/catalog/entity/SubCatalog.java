@@ -3,6 +3,10 @@ package org.imures.cashregister.catalog.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.imures.cashregister.product.entity.Product;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "sub_catalog")
 @Setter
@@ -23,5 +27,9 @@ public class SubCatalog {
     @ManyToOne
     @JoinColumn(name = "catalog_fk")
     private Catalog catalog;
+
+    @OneToMany(mappedBy = "subCatalog")
+    private Set<Product> products = new HashSet<>();
+
 
 }
