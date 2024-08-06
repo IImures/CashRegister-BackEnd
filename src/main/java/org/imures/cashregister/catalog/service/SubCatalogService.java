@@ -5,9 +5,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.catalog.controller.request.CreateSubCatalogRequest;
 import org.imures.cashregister.catalog.controller.response.CatalogResponse;
-import org.imures.cashregister.catalog.entity.CatalogEntity;
-import org.imures.cashregister.catalog.entity.SubCatalogEntity;
-import org.imures.cashregister.catalog.entity.SubCatalogTypeEntity;
+import org.imures.cashregister.catalog.entity.Catalog;
+import org.imures.cashregister.catalog.entity.SubCatalog;
+import org.imures.cashregister.catalog.entity.SubCatalogType;
 import org.imures.cashregister.catalog.mapper.CatalogMapper;
 import org.imures.cashregister.catalog.mapper.SubCatalogMapper;
 import org.imures.cashregister.catalog.repository.CatalogRepository;
@@ -33,10 +33,10 @@ public class SubCatalogService {
 
     @Transactional(readOnly = true)
     public CatalogResponse getSubCatalogById(long subCatalogId) {
-        SubCatalogEntity subCatalog = subCatalogRepository.findById(subCatalogId)
+        SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
                 .orElseThrow(() -> new EntityNotFoundException("Sub-Catalog Not Found"));
 
-        CatalogEntity catalog = subCatalog.getCatalog();
+        Catalog catalog = subCatalog.getCatalog();
 
         CatalogResponse catalogResponse = catalogMapper.fromEntityToResponse(catalog);
         catalogResponse.setSubCatalogs(
@@ -48,22 +48,22 @@ public class SubCatalogService {
 
     @Transactional
     public CatalogResponse createSubCatalog(CreateSubCatalogRequest subCatalogRequest) {
-        SubCatalogEntity subCatalog = subCatalogRepository
+        SubCatalog subCatalog = subCatalogRepository
                 .findBySubCatalogName(subCatalogRequest.getSubCatalogName());
         if(subCatalog != null) {
             throw new EntityExistsException("Sub-Catalog already exists");
         }
-        CatalogEntity catalog = catalogRepository.findById(subCatalogRequest.getCatalogId())
+        Catalog catalog = catalogRepository.findById(subCatalogRequest.getCatalogId())
                 .orElseThrow(() ->new EntityNotFoundException("Catalog not found with is: " + subCatalogRequest.getCatalogId()));
-        SubCatalogTypeEntity type = typeRepository.findById(subCatalogRequest.getSubCatalogType())
+        SubCatalogType type = typeRepository.findById(subCatalogRequest.getSubCatalogType())
                 .orElseThrow(()-> new EntityNotFoundException("Sub-Catalog type not found with is: " + subCatalogRequest.getSubCatalogType()));
 
-        SubCatalogEntity created = new SubCatalogEntity();
+        SubCatalog created = new SubCatalog();
         created.setSubCatalogName(subCatalogRequest.getSubCatalogName());
         created.setCatalog(catalog);
         created.setSubCatalogType(type);
 
-        SubCatalogEntity saved = subCatalogRepository.save(created);
+        SubCatalog saved = subCatalogRepository.save(created);
 
         CatalogResponse catalogResponse = catalogMapper.fromEntityToResponse(saved.getCatalog());
         catalogResponse.setSubCatalogs(
@@ -74,24 +74,24 @@ public class SubCatalogService {
 
     @Transactional
     public void deleteSubCatalog(long subCatalogId) {
-        SubCatalogEntity subCatalog = subCatalogRepository.findById(subCatalogId)
+        SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
                 .orElseThrow(()-> new EntityNotFoundException("Sub-Catalog not found with is: " + subCatalogId));
         subCatalogRepository.delete(subCatalog);
     }
 
     @Transactional
     public CatalogResponse updateSubCatalog(long subCatalogId, CreateSubCatalogRequest subCatalogRequest) {
-        SubCatalogEntity subCatalog = subCatalogRepository.findById(subCatalogId)
+        SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
                 .orElseThrow(()-> new EntityNotFoundException("Sub-Catalog not found with is: " + subCatalogId));
 
         Optional.ofNullable(subCatalogRequest.getCatalogId()).ifPresent((catalogId) -> {
-            CatalogEntity catalog = catalogRepository.findById(catalogId)
+            Catalog catalog = catalogRepository.findById(catalogId)
                     .orElseThrow(()-> new EntityNotFoundException("Catalog not found with is: " + catalogId));
             subCatalog.setCatalog(catalog);
         });
 
         Optional.ofNullable(subCatalogRequest.getSubCatalogType()).ifPresent((typeId)->{
-            SubCatalogTypeEntity subCatalogType = typeRepository.findById(typeId)
+            SubCatalogType subCatalogType = typeRepository.findById(typeId)
                     .orElseThrow(()-> new EntityNotFoundException("Sub-Catalog type not found with is: " + typeId));
             subCatalog.setSubCatalogType(subCatalogType);
         });
@@ -99,7 +99,7 @@ public class SubCatalogService {
 
         Optional.ofNullable(subCatalogRequest.getSubCatalogName()).ifPresent(subCatalog::setSubCatalogName);
 
-        SubCatalogEntity saved = subCatalogRepository.save(subCatalog);
+        SubCatalog saved = subCatalogRepository.save(subCatalog);
 
         CatalogResponse response = catalogMapper.fromEntityToResponse(saved.getCatalog());
         response.setSubCatalogs(

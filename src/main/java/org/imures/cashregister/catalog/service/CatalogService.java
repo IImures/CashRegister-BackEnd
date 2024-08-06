@@ -5,9 +5,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.catalog.controller.request.CatalogRequest;
 import org.imures.cashregister.catalog.controller.response.CatalogResponse;
-import org.imures.cashregister.catalog.entity.CatalogEntity;
-import org.imures.cashregister.catalog.entity.SubCatalogEntity;
-import org.imures.cashregister.catalog.entity.SubCatalogTypeEntity;
+import org.imures.cashregister.catalog.entity.Catalog;
+import org.imures.cashregister.catalog.entity.SubCatalog;
+import org.imures.cashregister.catalog.entity.SubCatalogType;
 import org.imures.cashregister.catalog.mapper.CatalogMapper;
 import org.imures.cashregister.catalog.mapper.SubCatalogMapper;
 import org.imures.cashregister.catalog.repository.CatalogRepository;
@@ -36,7 +36,7 @@ public class CatalogService
 
     @Transactional(readOnly = true)
     public Page<CatalogResponse> findAll(Pageable pageRequest) {
-        Page<CatalogEntity> catalogPage = catalogRepository.findAll(pageRequest);
+        Page<Catalog> catalogPage = catalogRepository.findAll(pageRequest);
 
         Page<CatalogResponse> response = catalogPage.map(catalogMapper::fromEntityToResponse);
         response.forEach(subC -> subC.setSubCatalogs(
@@ -50,12 +50,12 @@ public class CatalogService
 
     @Transactional(readOnly = true)
     public CatalogResponse getCatalogById(long catalogId) {
-        CatalogEntity catalogEntity = catalogRepository.findById(catalogId)
+        Catalog catalog = catalogRepository.findById(catalogId)
                 .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
 
-        CatalogResponse catalogResponse = catalogMapper.fromEntityToResponse(catalogEntity);
+        CatalogResponse catalogResponse = catalogMapper.fromEntityToResponse(catalog);
         catalogResponse.setSubCatalogs(
-                catalogEntity.getSubCatalogs().stream()
+                catalog.getSubCatalogs().stream()
                         .map(subCatalogMapper::fromEntityToResponse)
                         .collect(Collectors.toSet())
         );
@@ -65,33 +65,33 @@ public class CatalogService
 
     @Transactional
     public CatalogResponse createCatalog(CatalogRequest catalogRequest) {
-        CatalogEntity catalogEntity = catalogRepository.findByCatalogName(
+        Catalog catalog = catalogRepository.findByCatalogName(
                 catalogRequest.getCatalogName()
         );
-        if (catalogEntity != null) {
+        if (catalog != null) {
             throw new EntityExistsException("Catalog already exists");
         }
-        CatalogEntity created = new CatalogEntity();
+        Catalog created = new Catalog();
         created.setCatalogName(catalogRequest.getCatalogName());
 
         if(catalogRequest.getSubCatalogs() != null) {
-            HashMap<Long, SubCatalogTypeEntity> types = subCatalogTypeRepository.findAll().stream()
+            HashMap<Long, SubCatalogType> types = subCatalogTypeRepository.findAll().stream()
                     .collect(Collectors.toMap(
-                            SubCatalogTypeEntity::getId,
+                            SubCatalogType::getId,
                             entity -> entity,
                             (existing, replacement) -> existing,
                             HashMap::new
                     ));
             Arrays.stream(catalogRequest.getSubCatalogs())
                     .map(o ->{
-                        SubCatalogEntity subCat = new SubCatalogEntity();
+                        SubCatalog subCat = new SubCatalog();
                         subCat.setSubCatalogName(o.getSubCatalogName());
                         subCat.setSubCatalogType(types.get(o.getSubCatalogType()));
                         return subCat;
                     }).forEach(created::addSubCatalog);
         }
 
-        CatalogEntity saved = catalogRepository.save(created);
+        Catalog saved = catalogRepository.save(created);
 
         CatalogResponse response = catalogMapper.fromEntityToResponse(saved);
         response.setSubCatalogs(saved.getSubCatalogs().stream().map(subCatalogMapper::fromEntityToResponse).collect(Collectors.toSet()));
@@ -101,7 +101,7 @@ public class CatalogService
 
     @Transactional
     public void deleteCatalog(long catalogId) {
-        CatalogEntity catalog = catalogRepository.findById(catalogId)
+        Catalog catalog = catalogRepository.findById(catalogId)
                 .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
 
         catalogRepository.delete(catalog);

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity(name = "sub_catalog")
 @Setter
 @Getter
-public class SubCatalogEntity {
+public class SubCatalog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,10 +18,10 @@ public class SubCatalogEntity {
 
     @ManyToOne
     @JoinColumn(name= "sub_category_type_fk", nullable = false)
-    private SubCatalogTypeEntity subCatalogType;
+    private SubCatalogType subCatalogType;
 
     @ManyToOne
     @JoinColumn(name = "catalog_fk")
-    private CatalogEntity catalog;
+    private Catalog catalog;
 
 }

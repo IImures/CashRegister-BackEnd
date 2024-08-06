@@ -9,7 +9,7 @@ import java.util.Set;
 @Entity(name = "sub_catalog_type")
 @Getter
 @Setter
-public class SubCatalogTypeEntity {
+public class SubCatalogType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,5 +19,5 @@ public class SubCatalogTypeEntity {
     private String type;
 
     @OneToMany(mappedBy ="subCatalogType")
-    private Set<SubCatalogEntity> subCatalogs;
+    private Set<SubCatalog> subCatalogs;
 }

@@ -10,7 +10,7 @@ import java.util.Set;
 @Entity(name ="catalog")
 @Getter
 @Setter
-public class CatalogEntity
+public class Catalog
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,10 +20,10 @@ public class CatalogEntity
     private String catalogName;
 
     @OneToMany(mappedBy = "catalog", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<SubCatalogEntity> subCatalogs = new HashSet<>();
+    private Set<SubCatalog> subCatalogs = new HashSet<>();
 
-    public void addSubCatalog(SubCatalogEntity subCatalogEntity){
-        subCatalogs.add(subCatalogEntity);
-        subCatalogEntity.setCatalog(this);
+    public void addSubCatalog(SubCatalog subCatalog){
+        subCatalogs.add(subCatalog);
+        subCatalog.setCatalog(this);
     }
 }
