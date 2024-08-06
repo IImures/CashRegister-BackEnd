@@ -18,7 +18,7 @@ public class Product {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name= "sub_category_fk", nullable = false)
+    @JoinColumn(name= "sub_catalog_id", nullable = false)
     private SubCatalog subCatalog;
 
     @OneToOne(cascade = CascadeType.ALL)
