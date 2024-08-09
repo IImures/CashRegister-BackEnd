@@ -16,16 +16,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("api/v1/catalog")
+@CrossOrigin(origins = "*")
 public class CatalogController
 {
 
     private final CatalogService catalogService;
 
-    @GetMapping
+    @GetMapping("/page")
     public ResponseEntity<Page<CatalogResponse>> getPagedCatalogs(
         @RequestParam(
                 value = "page",
@@ -48,6 +51,11 @@ public class CatalogController
         Pageable pageRequest = PageRequest.of(page, limit, Sort.by(sortBy));
         Page<CatalogResponse> response = catalogService.findAll(pageRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CatalogResponse>> getAllCatalogs(){
+        return new ResponseEntity<>(catalogService.getAllCatalogs(), HttpStatus.OK);
     }
 
     @GetMapping(path = "/{catalogId}")
