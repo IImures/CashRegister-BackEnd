@@ -118,8 +118,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductResponse> findAll(Pageable pageRequest) {
-        Page<Product> productPage = productRepository.findAll(pageRequest);
+    public Page<ProductResponse> findAll(Pageable pageRequest, Long subCatalogId) {
+        SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
+                .orElseThrow(() -> new EntityNotFoundException("SubCatalog with id " + subCatalogId + " not found"));
+
+        Page<Product> productPage = productRepository.findAllBySubCatalog(pageRequest, subCatalog);
 
         Page<ProductResponse> response = productPage.map(productMapper::fromEntityToResponse);
         response.forEach( prd->
