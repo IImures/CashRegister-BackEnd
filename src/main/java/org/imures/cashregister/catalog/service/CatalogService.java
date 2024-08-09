@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -105,5 +106,10 @@ public class CatalogService
                 .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
 
         catalogRepository.delete(catalog);
+    }
+
+    public List<CatalogResponse> getAllCatalogs() {
+        List<Catalog> catalogs = catalogRepository.findAll();
+        return catalogs.stream().map(catalogMapper::fromEntityToResponse).collect(Collectors.toList());
     }
 }
