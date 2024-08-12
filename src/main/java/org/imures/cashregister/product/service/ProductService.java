@@ -5,9 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.catalog.entity.SubCatalog;
 import org.imures.cashregister.catalog.mapper.SubCatalogMapper;
 import org.imures.cashregister.catalog.repository.SubCatalogRepository;
+import org.imures.cashregister.product.controller.request.ProductDescriptionRequest;
 import org.imures.cashregister.product.controller.request.ProductRequest;
+import org.imures.cashregister.product.controller.response.ProductDescriptionResponse;
 import org.imures.cashregister.product.controller.response.ProductResponse;
 import org.imures.cashregister.product.entity.Product;
+import org.imures.cashregister.product.entity.ProductDescription;
 import org.imures.cashregister.product.entity.ProductImage;
 import org.imures.cashregister.product.mapper.ProductMapper;
 import org.imures.cashregister.product.repository.ProductImageRepository;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +38,9 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+        Product product = getProductEntity(productId);
 
-        ProductResponse productResponse = productMapper.fromEntityToResponse(product);
-        productResponse.setSubCatalog(subCatalogMapper.fromEntityToResponse(product.getSubCatalog()));
-
-        return productResponse;
+        return getProductResponse(product);
     }
 
     @Transactional
@@ -54,55 +54,55 @@ public class ProductService {
 
         Product saved = productRepository.save(createdProduct);
 
-        ProductResponse productResponse = productMapper.fromEntityToResponse(saved);
-        productResponse.setSubCatalog(subCatalogMapper.fromEntityToResponse(saved.getSubCatalog()));
-
-        return productResponse;
+        return getProductResponse(saved);
     }
 
     @Transactional
-    public ProductResponse addProductImage(MultipartFile image, Long productId) throws IOException {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+    public ProductResponse updateProduct(ProductRequest request, Long productId) {
+        Product product = getProductEntity(productId);
 
-//        Optional<ProductImage> optional=productImageRepository.findByNameAndType(image.getOriginalFilename(),image.getContentType());
-        if (product.getImage() != null){
+        Optional.ofNullable(request.getProductName()).ifPresent(product::setName);
+
+        Optional.ofNullable(request.getSubCatalogId()).ifPresent((subCatalogId)->{
+            SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
+                    .orElseThrow(()-> new EntityNotFoundException("SubCatalog with id " + subCatalogId + " not found"));
+            product.setSubCatalog(subCatalog);
+        });
+
+        productRepository.save(product);
+
+        return getProductResponse(product);
+    }
+
+    @Transactional
+    public void addProductImage(MultipartFile image, Long productId) throws IOException {
+        Product product = getProductEntity(productId);
+
+        ProductImage imageData = ProductImage.builder()
+                .name(image.getName())
+                .type(image.getContentType())
+                .imageData(image.getBytes())
+                .build();
+
+        // Save the new image entity to the database
+        imageData = productImageRepository.save(imageData);
+
+        // If there's an existing image, delete it after saving the new one
+        if (product.getImage() != null) {
             ProductImage toDelete = product.getImage();
-
-            ProductImage imageData = (
-                    ProductImage.builder()
-                            .name(image.getName())
-                            .type(image.getContentType())
-                            .imageData(image.getBytes())
-                            .product(product)
-                            .build()
-            );
-            product.setImage(imageData);
-
             productImageRepository.delete(toDelete);
-        }else{
-            ProductImage imageData = (
-                    ProductImage.builder()
-                            .name(image.getName())
-                            .type(image.getContentType())
-                            .imageData(image.getBytes())
-                            .product(product)
-                            .build()
-            );
-            product.setImage(imageData);
         }
-        Product saved = productRepository.save(product);
 
-        ProductResponse productResponse = productMapper.fromEntityToResponse(saved);
-        productResponse.setSubCatalog(subCatalogMapper.fromEntityToResponse(saved.getSubCatalog()));
+        // Set the saved image to the product
+        product.setImage(imageData);
 
-        return productResponse;
+        // Save the product with the new image
+        productRepository.save(product);
     }
 
     @Transactional(readOnly = true)
     public byte[] getImageBytes(Long productId) {
-        Product product=productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+        Product product = getProductEntity(productId);
         if (product.getImage() == null){
             return new byte[0];
         }
@@ -110,10 +110,9 @@ public class ProductService {
         return product.getImage().getImageData();
     }
 
+    @Transactional
     public void deleteProduct(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
-
+        Product product = getProductEntity(productId);
         productRepository.delete(product);
     }
 
@@ -133,5 +132,124 @@ public class ProductService {
                          .forEach(prd::setSubCatalog)
         );
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDescriptionResponse getProductDescription(Long id) {
+        Product product = getProductEntity(id);
+
+        ProductDescription productDescription = getProductDescriptionEntity(id);
+
+        return ProductDescriptionResponse.builder()
+                .id(productDescription.getId())
+                .productName(product.getName())
+                .title(productDescription.getTitle())
+                .description(productDescription.getDescription())
+                .characteristics(productDescription.getCharacteristics())
+                .build();
+    }
+
+    @Transactional
+    public ProductDescriptionResponse createProductDescription(Long id, ProductDescriptionRequest request) {
+        Product product = getProductEntity(id);
+
+        if(product.getProductDescription() != null){
+            product.setProductDescription(null);
+        }
+
+        ProductDescription productDescription = new ProductDescription();
+        productDescription.setTitle(request.getTitle());
+        productDescription.setDescription(request.getDescription());
+        productDescription.setCharacteristics(request.getCharacteristics());
+
+        product.setProductDescription(productDescription);
+        ProductDescription saved = productRepository.save(product).getProductDescription();
+
+        return ProductDescriptionResponse.builder()
+                .id(saved.getId())
+                .productName(product.getName())
+                .title(saved.getTitle())
+                .description(saved.getDescription())
+                .characteristics(saved.getCharacteristics())
+                .build();
+    }
+
+    @Transactional
+    public void addProductDescriptionImage(MultipartFile image, Long productId) throws IOException {
+        Product product = getProductEntity(productId);
+        ProductDescription productDescription = getProductDescriptionEntity(productId);
+
+        ProductImage imageData = ProductImage.builder()
+                .name(image.getName())
+                .type(image.getContentType())
+                .imageData(image.getBytes())
+                .build();
+
+        // Save the new image entity to the database
+        imageData = productImageRepository.save(imageData);
+
+        // If there's an existing image, delete it
+        if (productDescription.getImage() != null) {
+            ProductImage toDelete = productDescription.getImage();
+            productDescription.setImage(null);
+            productImageRepository.delete(toDelete);
+        }
+
+        // Set the saved image to the product description
+        productDescription.setImage(imageData);
+
+        // Save the product description with the new image
+        productRepository.save(product);
+    }
+
+
+    @Transactional(readOnly = true)
+    public byte[] getProductDescriptionImage(Long id) {
+        ProductDescription productDescription = getProductDescriptionEntity(id);
+
+        if (productDescription.getImage() == null){
+            return new byte[0];
+        }
+
+        return productDescription.getImage().getImageData();
+    }
+
+    @Transactional
+    public ProductDescriptionResponse updateProductDescription(ProductDescriptionRequest request, Long productId) {
+        ProductDescription productDescription = getProductDescriptionEntity(productId);
+
+        Optional.ofNullable(request.getCharacteristics()).ifPresent(productDescription::setCharacteristics);
+        Optional.ofNullable(request.getDescription()).ifPresent(productDescription::setDescription);
+        Optional.ofNullable(request.getTitle()).ifPresent(productDescription::setTitle);
+
+        Product savedProduct = productRepository.save(productDescription.getProduct());
+        ProductDescription savedDescription = savedProduct.getProductDescription();
+
+        return ProductDescriptionResponse.builder()
+                .id(savedDescription.getId())
+                .productName(savedProduct.getName())
+                .title(savedDescription.getTitle())
+                .description(savedDescription.getDescription())
+                .characteristics(savedDescription.getCharacteristics())
+                .build();
+    }
+
+
+
+    private Product getProductEntity(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+    }
+
+    private ProductDescription getProductDescriptionEntity(Long productId) {
+        ProductDescription productDescription = getProductEntity(productId).getProductDescription();
+        if (productDescription == null) throw new EntityNotFoundException("Description of the product with id " + productId + " not found");
+        return productDescription;
+    }
+
+    private ProductResponse getProductResponse(Product product) {
+        ProductResponse productResponse = productMapper.fromEntityToResponse(product);
+        productResponse.setSubCatalog(subCatalogMapper.fromEntityToResponse(product.getSubCatalog()));
+        return productResponse;
     }
 }

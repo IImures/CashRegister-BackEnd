@@ -25,8 +25,8 @@ public class ProductImage {
     @Lob
     @Column(nullable = false)
     private byte[] imageData;
-
-    @OneToOne(mappedBy = "image")
-    private Product product;
+//
+//    @OneToOne(mappedBy = "image")
+//    private Product product;
 
 }

@@ -1,8 +1,12 @@
 package org.imures.cashregister.product.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.imures.cashregister.exceptions.NullValueException;
 import org.imures.cashregister.exceptions.TooManyEntitiesRequestedException;
+import org.imures.cashregister.product.controller.request.ProductDescriptionRequest;
 import org.imures.cashregister.product.controller.request.ProductRequest;
+import org.imures.cashregister.product.controller.response.ProductDescriptionResponse;
 import org.imures.cashregister.product.controller.response.ProductResponse;
 import org.imures.cashregister.product.service.ProductService;
 import org.springframework.data.domain.Page;
@@ -13,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,31 +66,26 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
-            @RequestBody ProductRequest productRequest
+            @RequestBody @Valid ProductRequest productRequest, Errors errors
     ) {
+        if(errors.hasErrors()) throw new NullValueException(errors.getAllErrors().get(0).getDefaultMessage());
         return new ResponseEntity<>(productService.createProduct(productRequest), HttpStatus.CREATED);
     }
 
     @PutMapping(path = "{productId}/image")
-    public ResponseEntity<ProductResponse> addProductImage(
+    public ResponseEntity<Void> addProductImage(
             @RequestParam("image") MultipartFile image,
             @PathVariable Long productId
             ) throws IOException {
-        return new ResponseEntity<>(productService.addProductImage(image, productId), HttpStatus.OK);
+        productService.addProductImage(image, productId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(path = "{productId}/image")
     public ResponseEntity<String> getImage(
             @PathVariable Long productId
     ) {
-        byte[] image = productService.getImageBytes(productId);
-        String base64Image = "data:image/png;base64," + Base64.getEncoder().encodeToString(image);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
-        return ResponseEntity.status(HttpStatus.OK)
-                .headers(headers)
-                .body(base64Image);
+        return getBase64Image(productService.getImageBytes(productId));
     }
 
     @DeleteMapping(path = "/{productId}")
@@ -94,5 +94,64 @@ public class ProductController {
     ){
         productService.deleteProduct(productId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping(path = "/{productId}")
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable Long productId,
+            @RequestBody ProductRequest request
+    ){
+        return new ResponseEntity<>(productService.updateProduct(request, productId), HttpStatus.OK);
+    }
+
+    @GetMapping(path = "{id}/description")
+    public ResponseEntity<ProductDescriptionResponse> getProductDescription(
+            @PathVariable Long id
+    ){
+        return new ResponseEntity<>(productService.getProductDescription(id), HttpStatus.OK);
+    }
+
+    @PostMapping(path = "{id}/description")
+    public ResponseEntity<ProductDescriptionResponse> createProductDescription(
+            @PathVariable Long id,
+            @RequestBody @Valid ProductDescriptionRequest request, Errors errors
+            ){
+        if(errors.hasErrors()) throw new NullValueException(errors.getAllErrors().get(0).getDefaultMessage());
+        return new ResponseEntity<>(productService.createProductDescription(id, request), HttpStatus.CREATED);
+    }
+
+    @PutMapping(path = "{productId}/description/image")
+    public ResponseEntity<Void> addProductDescriptionImage(
+            @RequestParam("image") MultipartFile image,
+            @PathVariable Long productId
+    ) throws IOException {
+        productService.addProductDescriptionImage(image, productId);
+        return new ResponseEntity<>( HttpStatus.OK);
+    }
+
+    @PutMapping(path = "{productId}/description")
+    public ResponseEntity<ProductDescriptionResponse> updateProductDescription(
+            @PathVariable Long productId,
+            @RequestBody ProductDescriptionRequest request
+    ){
+        return new ResponseEntity<>(productService.updateProductDescription(request, productId), HttpStatus.OK);
+    }
+
+    @GetMapping(path = "{id}/description/image")
+    public ResponseEntity<String> getProductDescriptionImage(
+            @PathVariable Long id
+    ){
+        return getBase64Image(productService.getProductDescriptionImage(id));
+    }
+
+
+    private ResponseEntity<String> getBase64Image(byte[] image) {
+        String base64Image = "data:image/png;base64," + Base64.getEncoder().encodeToString(image);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_PLAIN);
+        return ResponseEntity.status(HttpStatus.OK)
+                .headers(headers)
+                .body(base64Image);
     }
 }

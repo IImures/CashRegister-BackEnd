@@ -1,9 +1,6 @@
 package org.imures.cashregister.product.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,11 +10,22 @@ import lombok.Setter;
 public class ProductDescription {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private String title;
 
     @Column(nullable = false)
     private String description;
 
+    @Column(nullable = false)
+    private String characteristics;
+
     @OneToOne(mappedBy = "productDescription")
     private Product product;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name ="image_id")
+    private ProductImage image;
 }
