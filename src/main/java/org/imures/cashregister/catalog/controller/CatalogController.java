@@ -73,6 +73,14 @@ public class CatalogController
         return new ResponseEntity<>(catalogService.createCatalog(catalogRequest), HttpStatus.CREATED);
     }
 
+    @PutMapping(path = "{catalogId}")
+    public ResponseEntity<CatalogResponse> updateCatalog(
+            @PathVariable Long catalogId,
+            @RequestBody CatalogRequest request
+            ){
+        return new ResponseEntity<>(catalogService.updateCatalog(request, catalogId), HttpStatus.OK);
+    }
+
     @DeleteMapping(path= "/{catalogId}")
     public ResponseEntity<Void> deleteCatalog(
             @PathVariable long catalogId

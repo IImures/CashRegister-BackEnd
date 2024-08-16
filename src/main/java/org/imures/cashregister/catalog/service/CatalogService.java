@@ -17,10 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -51,8 +48,7 @@ public class CatalogService
 
     @Transactional(readOnly = true)
     public CatalogResponse getCatalogById(long catalogId) {
-        Catalog catalog = catalogRepository.findById(catalogId)
-                .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
+        Catalog catalog = getCatalogEntity(catalogId);
 
         CatalogResponse catalogResponse = catalogMapper.fromEntityToResponse(catalog);
         catalogResponse.setSubCatalogs(
@@ -102,14 +98,32 @@ public class CatalogService
 
     @Transactional
     public void deleteCatalog(long catalogId) {
-        Catalog catalog = catalogRepository.findById(catalogId)
-                .orElseThrow(() -> new EntityNotFoundException("Catalog not found"));
+        Catalog catalog = getCatalogEntity(catalogId);
 
         catalogRepository.delete(catalog);
     }
 
+    @Transactional(readOnly = true)
     public List<CatalogResponse> getAllCatalogs() {
         List<Catalog> catalogs = catalogRepository.findAll();
         return catalogs.stream().map(catalogMapper::fromEntityToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CatalogResponse updateCatalog(CatalogRequest request, Long catalogId) {
+        Catalog catalog = getCatalogEntity(catalogId);
+
+        Optional.ofNullable(request.getCatalogName()).ifPresent(catalog::setCatalogName);
+
+        Catalog saved = catalogRepository.save(catalog);
+
+        CatalogResponse response = catalogMapper.fromEntityToResponse(saved);
+        response.setSubCatalogs(saved.getSubCatalogs().stream().map(subCatalogMapper::fromEntityToResponse).collect(Collectors.toSet()));
+        return response;
+    }
+
+    private Catalog getCatalogEntity(Long catalogId) {
+        return catalogRepository.findById(catalogId)
+                .orElseThrow(() -> new EntityNotFoundException("Catalog with id " + catalogId + " not found"));
     }
 }
