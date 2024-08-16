@@ -13,4 +13,6 @@ public class ProductRequest {
     private String productName;
     @NotNull(message = "Product must be associated with some sub-category")
     private Long subCatalogId;
+    @NotNull
+    private Long producerId;
 }

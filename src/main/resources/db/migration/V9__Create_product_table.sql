@@ -16,3 +16,11 @@ ALTER TABLE if exists product_description
 ALTER TABLE if exists product_description
     ADD CONSTRAINT product_fk
         FOREIGN KEY (product_id) REFERENCES product;
+
+alter table if exists product
+    add column producer_id bigint not null;
+
+alter table if exists product
+    add constraint producer_fk
+        foreign key (producer_id)
+            references producer

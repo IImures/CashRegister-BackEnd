@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.imures.cashregister.catalog.entity.SubCatalog;
+import org.imures.cashregister.producer.entity.Producer;
 
 @Entity(name = "product")
 @Getter
@@ -28,6 +29,10 @@ public class Product {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "product_description_id")
     private ProductDescription productDescription;
+
+    @ManyToOne
+    @JoinColumn(name = "producer_id", nullable = false)
+    private Producer producer;
 
 }
 

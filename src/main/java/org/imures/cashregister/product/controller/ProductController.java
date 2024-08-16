@@ -3,7 +3,6 @@ package org.imures.cashregister.product.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.exceptions.NullValueException;
-import org.imures.cashregister.exceptions.TooManyEntitiesRequestedException;
 import org.imures.cashregister.product.controller.request.ProductDescriptionRequest;
 import org.imures.cashregister.product.controller.request.ProductRequest;
 import org.imures.cashregister.product.controller.response.ProductDescriptionResponse;
@@ -32,8 +31,8 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping(    "sub-catalog/{subCatalogId}")
-    public ResponseEntity<Page<ProductResponse>> getPagedCatalogs(
+    @GetMapping("subcatalog/{subCatalogId}")
+    public ResponseEntity<Page<ProductResponse>> getPagedProducts(
             @RequestParam(
                     value = "page",
                     required = false,
@@ -49,11 +48,36 @@ public class ProductController {
                     required = false,
                     defaultValue = "id"
             ) String sortBy,
+            @RequestParam(
+                    value ="producers",
+                    required = false
+            ) String producers,
+            @RequestParam(
+                    value = "name",
+                    required = false
+            ) String name,
             @PathVariable Long subCatalogId
     ){
-        if(limit > 150 || limit <= 0) throw new TooManyEntitiesRequestedException("Limit must be less then 150 or higher then 0");
         Pageable pageRequest = PageRequest.of(page, limit, Sort.by(sortBy));
-        Page<ProductResponse> response = productService.findAll(pageRequest, subCatalogId);
+        Page<ProductResponse> response;
+
+        // If both producers and name are null or empty, retrieve all products in the sub-catalog
+        if ((producers == null || producers.isEmpty()) && (name == null || name.isEmpty())) {
+            response = productService.findAll(pageRequest, subCatalogId);
+        }
+        // If only producers is provided, filter by producer
+        else if (producers != null && !producers.isEmpty() && (name == null || name.isEmpty())) {
+            response = productService.findAllByProducer(pageRequest, subCatalogId, producers);
+        }
+        // If only name is provided, filter by name
+        else if (producers == null || producers.isEmpty()) {
+            response = productService.findAllByName(pageRequest, subCatalogId, name);
+        }
+        // If both producers and name are provided, filter by both
+        else {
+            response = productService.findAllByProducerAndName(pageRequest, subCatalogId, producers, name);
+        }
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

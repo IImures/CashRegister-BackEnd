@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.catalog.entity.SubCatalog;
 import org.imures.cashregister.catalog.mapper.SubCatalogMapper;
 import org.imures.cashregister.catalog.repository.SubCatalogRepository;
+import org.imures.cashregister.producer.entity.Producer;
+import org.imures.cashregister.producer.repository.ProducerRepository;
 import org.imures.cashregister.product.controller.request.ProductDescriptionRequest;
 import org.imures.cashregister.product.controller.request.ProductRequest;
 import org.imures.cashregister.product.controller.response.ProductDescriptionResponse;
@@ -22,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final SubCatalogRepository subCatalogRepository;
+    private final ProducerRepository producerRepository;
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long productId) {
@@ -45,12 +48,15 @@ public class ProductService {
 
     @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
-        SubCatalog subCatalog = subCatalogRepository.findById(productRequest.getSubCatalogId())
-                .orElseThrow(()-> new EntityNotFoundException("SubCatalog with id " + productRequest.getSubCatalogId() + " not found"));
+        SubCatalog subCatalog = getSubCatalog(productRequest.getSubCatalogId());
+
+        Producer producer = producerRepository.findById(productRequest.getProducerId())
+                .orElseThrow(() -> new EntityNotFoundException("Producer with id " + productRequest.getProducerId() + " not found"));
 
         Product createdProduct = new Product();
         createdProduct.setName(productRequest.getProductName());
         createdProduct.setSubCatalog(subCatalog);
+        createdProduct.setProducer(producer);
 
         Product saved = productRepository.save(createdProduct);
 
@@ -64,9 +70,14 @@ public class ProductService {
         Optional.ofNullable(request.getProductName()).ifPresent(product::setName);
 
         Optional.ofNullable(request.getSubCatalogId()).ifPresent((subCatalogId)->{
-            SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
-                    .orElseThrow(()-> new EntityNotFoundException("SubCatalog with id " + subCatalogId + " not found"));
+            SubCatalog subCatalog = getSubCatalog(subCatalogId);
             product.setSubCatalog(subCatalog);
+        });
+
+        Optional.ofNullable(request.getProducerId()).ifPresent((producerId)->{
+            Producer producer = producerRepository.findById(producerId)
+                    .orElseThrow(()-> new EntityNotFoundException("Producer with id " + producerId + " not found"));
+            product.setProducer(producer);
         });
 
         productRepository.save(product);
@@ -118,20 +129,46 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<ProductResponse> findAll(Pageable pageRequest, Long subCatalogId) {
-        SubCatalog subCatalog = subCatalogRepository.findById(subCatalogId)
-                .orElseThrow(() -> new EntityNotFoundException("SubCatalog with id " + subCatalogId + " not found"));
+        SubCatalog subCatalog = getSubCatalog(subCatalogId);
 
         Page<Product> productPage = productRepository.findAllBySubCatalog(pageRequest, subCatalog);
 
-        Page<ProductResponse> response = productPage.map(productMapper::fromEntityToResponse);
-        response.forEach( prd->
-                 productPage.get()
-                        .filter( c -> Objects.equals(prd.getId(), c.getId()))
-                         .map(Product::getSubCatalog)
-                         .map(subCatalogMapper::fromEntityToResponse)
-                         .forEach(prd::setSubCatalog)
-        );
-        return response;
+        return getPagedProductResponse(productPage);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findAllByName(Pageable pageRequest, Long subCatalogId, String name) {
+        SubCatalog subCatalog = getSubCatalog(subCatalogId);
+
+        Page<Product> productPage = productRepository.findAllBySubCatalogAndNameContainingIgnoreCase(pageRequest, subCatalog, name);
+
+        return getPagedProductResponse(productPage);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findAllByProducer(Pageable pageRequest, Long subCatalogId, String producers) {
+        SubCatalog subCatalog = getSubCatalog(subCatalogId);
+
+        Set<Long> producersId = Arrays.stream(producers.split(","))
+                .map(Long::parseLong)
+                .collect(Collectors.toSet());
+
+        Page<Product> productPage = productRepository.findAllBySubCatalogAndProducer_IdIn(pageRequest, subCatalog, producersId);
+        return getPagedProductResponse(productPage);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findAllByProducerAndName(Pageable pageRequest, Long subCatalogId, String producers, String name) {
+        SubCatalog subCatalog = getSubCatalog(subCatalogId);
+
+        Set<Long> producersId = Arrays.stream(producers.split(","))
+                .map(Long::parseLong)
+                .collect(Collectors.toSet());
+
+        Page<Product> productPage = productRepository.findAllBySubCatalogAndNameContainingIgnoreCaseAndProducer_IdIn(pageRequest, subCatalog, name, producersId);
+
+        return getPagedProductResponse(productPage);
     }
 
     @Transactional(readOnly = true)
@@ -234,7 +271,10 @@ public class ProductService {
                 .build();
     }
 
-
+    private SubCatalog getSubCatalog(Long subCatalogId) {
+        return subCatalogRepository.findById(subCatalogId)
+                .orElseThrow(() -> new EntityNotFoundException("SubCatalog with id " + subCatalogId + " not found"));
+    }
 
     private Product getProductEntity(Long productId) {
         return productRepository.findById(productId)
@@ -251,5 +291,17 @@ public class ProductService {
         ProductResponse productResponse = productMapper.fromEntityToResponse(product);
         productResponse.setSubCatalog(subCatalogMapper.fromEntityToResponse(product.getSubCatalog()));
         return productResponse;
+    }
+
+    private Page<ProductResponse> getPagedProductResponse(Page<Product> productPage) {
+        Page<ProductResponse> response = productPage.map(productMapper::fromEntityToResponse);
+        response.forEach( prd->
+                productPage.get()
+                        .filter( c -> Objects.equals(prd.getId(), c.getId()))
+                        .map(Product::getSubCatalog)
+                        .map(subCatalogMapper::fromEntityToResponse)
+                        .forEach(prd::setSubCatalog)
+        );
+        return response;
     }
 }
