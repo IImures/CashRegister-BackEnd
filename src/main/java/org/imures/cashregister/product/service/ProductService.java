@@ -15,6 +15,7 @@ import org.imures.cashregister.product.entity.Product;
 import org.imures.cashregister.product.entity.ProductDescription;
 import org.imures.cashregister.product.entity.ProductImage;
 import org.imures.cashregister.product.mapper.ProductMapper;
+import org.imures.cashregister.product.repository.ProductDescriptionRepository;
 import org.imures.cashregister.product.repository.ProductImageRepository;
 import org.imures.cashregister.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,7 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final SubCatalogRepository subCatalogRepository;
     private final ProducerRepository producerRepository;
+    private final ProductDescriptionRepository productDescriptionRepository;
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long productId) {
@@ -45,6 +47,24 @@ public class ProductService {
 
         return getProductResponse(product);
     }
+
+//    @Transactional
+//    public ProductResponse createProduct(ProductRequest productRequest) {
+//        SubCatalog subCatalog = getSubCatalog(productRequest.getSubCatalogId());
+//
+//        Producer producer = producerRepository.findById(productRequest.getProducerId())
+//                .orElseThrow(() -> new EntityNotFoundException("Producer with id " + productRequest.getProducerId() + " not found"));
+//
+//        Product createdProduct = new Product();
+//        createdProduct.setName(productRequest.getProductName());
+//        createdProduct.setSubCatalog(subCatalog);
+//        createdProduct.setProducer(producer);
+//
+//        Product saved = productRepository.save(createdProduct);
+//
+//        return getProductResponse(saved);
+//    }
+
 
     @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
@@ -57,6 +77,13 @@ public class ProductService {
         createdProduct.setName(productRequest.getProductName());
         createdProduct.setSubCatalog(subCatalog);
         createdProduct.setProducer(producer);
+
+        ProductDescription productDescription = new ProductDescription();
+        productDescription.setTitle(productRequest.getTitle());
+        productDescription.setDescription(productRequest.getDescription());
+        productDescription.setCharacteristics(productRequest.getCharacteristics());
+
+        createdProduct.setProductDescription(productDescription);
 
         Product saved = productRepository.save(createdProduct);
 
@@ -186,30 +213,34 @@ public class ProductService {
                 .build();
     }
 
-    @Transactional
-    public ProductDescriptionResponse createProductDescription(Long id, ProductDescriptionRequest request) {
-        Product product = getProductEntity(id);
-
-        if(product.getProductDescription() != null){
-            product.setProductDescription(null);
-        }
-
-        ProductDescription productDescription = new ProductDescription();
-        productDescription.setTitle(request.getTitle());
-        productDescription.setDescription(request.getDescription());
-        productDescription.setCharacteristics(request.getCharacteristics());
-
-        product.setProductDescription(productDescription);
-        ProductDescription saved = productRepository.save(product).getProductDescription();
-
-        return ProductDescriptionResponse.builder()
-                .id(saved.getId())
-                .productName(product.getName())
-                .title(saved.getTitle())
-                .description(saved.getDescription())
-                .characteristics(saved.getCharacteristics())
-                .build();
-    }
+//    @Transactional
+//    public ProductDescriptionResponse createProductDescription(Long id, ProductDescriptionRequest request) {
+//        Product product = getProductEntity(id);
+//
+//        if(product.getProductDescription() != null){
+//            throw new EntityExistsException("Product Description with id " + id + " already exists");
+//        }
+//
+//        ProductDescription productDescription = new ProductDescription();
+//        productDescription.setTitle(request.getTitle());
+//        productDescription.setDescription(request.getDescription());
+//        productDescription.setCharacteristics(request.getCharacteristics());
+//
+//        product.setProductDescription(productDescription);
+//        productDescription.setProduct(product);
+//        //WTF TODO postman saves normally when website isn't
+//        productDescriptionRepository.save(productDescription);
+//        ProductDescription saved = productRepository.save(product).getProductDescription();
+//
+//
+//        return ProductDescriptionResponse.builder()
+//                .id(saved.getId())
+//                .productName(product.getName())
+//                .title(saved.getTitle())
+//                .description(saved.getDescription())
+//                .characteristics(saved.getCharacteristics())
+//                .build();
+//    }
 
     @Transactional
     public void addProductDescriptionImage(MultipartFile image, Long productId) throws IOException {

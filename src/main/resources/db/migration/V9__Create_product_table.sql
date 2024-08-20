@@ -10,12 +10,6 @@ create table product (
                         constraint sub_catalog_fk foreign key (sub_catalog_id) references sub_catalog
 );
 
-ALTER TABLE if exists product_description
-    ADD COLUMN product_id bigint;
-
-ALTER TABLE if exists product_description
-    ADD CONSTRAINT product_fk
-        FOREIGN KEY (product_id) REFERENCES product;
 
 alter table if exists product
     add column producer_id bigint not null;
