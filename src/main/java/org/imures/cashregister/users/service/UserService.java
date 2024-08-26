@@ -5,15 +5,14 @@ import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.configuration.JwtService;
 import org.imures.cashregister.roles.entity.Role;
 import org.imures.cashregister.roles.repository.RoleRepository;
-import org.imures.cashregister.roles.response.RoleResponse;
 import org.imures.cashregister.users.controller.request.AuthenticationRequest;
 import org.imures.cashregister.users.controller.request.UserRequest;
 import org.imures.cashregister.users.controller.response.AuthenticationResponse;
-import org.imures.cashregister.users.controller.response.UserResponse;
 import org.imures.cashregister.users.entity.User;
 import org.imures.cashregister.users.repository.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +37,8 @@ public class UserService{
     public AuthenticationResponse createUser(UserRequest details){
         boolean isExists = true;
         try {
-            userRepository.findUserByLogin(details.getLogin()).orElseThrow(()-> new RuntimeException("User does not exists"));
+            userRepository.findUserByEmail(details.getEmail())
+                    .orElseThrow(()-> new RuntimeException("User does not exists"));
         } catch (RuntimeException e){
             isExists = false;
         }
@@ -63,8 +63,12 @@ public class UserService{
 
         User saved = userRepository.save(newUser);
         String jwtToken = jwtService.generateToken(saved);
+        String refreshToken = jwtService.generateRefreshToken(saved);
 
-        return new AuthenticationResponse(jwtToken);
+        return  AuthenticationResponse.builder()
+                .token(jwtToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -76,24 +80,33 @@ public class UserService{
                 )
         );
 
-        User user = userRepository.findUserByLogin(request.getLogin())
+        User user = userRepository.findUserByEmail(request.getLogin())
                 .orElseThrow(()-> new UsernameNotFoundException("User was not found"));
 
         String jwtToken = jwtService.generateToken(user);
-        return new AuthenticationResponse(jwtToken);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        return  AuthenticationResponse.builder()
+                .token(jwtToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
-    @Transactional
-    public UserResponse getUserById(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("User not found"));
+    @Transactional(readOnly = true)
+    public AuthenticationResponse refresh(String token) {
+        String userMail = jwtService.extractRefreshedUsername(token);
+        User user = userRepository.findUserByEmail(userMail)
+                .orElseThrow(()-> new UsernameNotFoundException("User does not exists"));
 
-        UserResponse response = new UserResponse();
-        BeanUtils.copyProperties(user, response);
+        if(!jwtService.isRefreshTokenValid(token, user)){
+            throw new BadCredentialsException("Invalid token");
+        }
+        String jwtToken = jwtService.generateToken(user);
+        String refreshedToken = jwtService.generateRefreshToken(user);
 
-        response.setRoles(
-                user.getRoles().stream().map((RoleResponse::new)).toArray(RoleResponse[]::new)
-        );
-        return response;
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .refreshToken(refreshedToken)
+                .build();
     }
 }

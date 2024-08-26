@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.users.controller.request.AuthenticationRequest;
 import org.imures.cashregister.users.controller.request.UserRequest;
 import org.imures.cashregister.users.controller.response.AuthenticationResponse;
-import org.imures.cashregister.users.controller.response.UserResponse;
 import org.imures.cashregister.users.service.UserService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,18 +24,19 @@ public class UserController {
         return new ResponseEntity<>(userService.createUser(request), HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(
+    @PostMapping(value = "/login")
+    public ResponseEntity<AuthenticationResponse> login(
             @RequestBody AuthenticationRequest request
     ){
         return new ResponseEntity<>(userService.authenticate(request), HttpStatus.OK);
     }
 
-    @GetMapping("view/{userId}")
-    public ResponseEntity<UserResponse> getUser(
-            @PathVariable Long userId
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refresh(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken
     ){
-        return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.OK);
+        System.out.println(refreshToken.substring(7));
+        return new ResponseEntity<>(userService.refresh(refreshToken.substring(7)), HttpStatus.OK);
     }
 
 }
