@@ -35,8 +35,15 @@ public class UserController {
     public ResponseEntity<AuthenticationResponse> refresh(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken
     ){
-        System.out.println(refreshToken.substring(7));
         return new ResponseEntity<>(userService.refresh(refreshToken.substring(7)), HttpStatus.OK);
+    }
+
+    @PostMapping("/valid")
+    public ResponseEntity<Void> valid(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    ){
+        userService.validate(token.substring(7));
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

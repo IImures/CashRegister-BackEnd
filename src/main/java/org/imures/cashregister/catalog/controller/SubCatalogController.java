@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("api/v1/sub-catalog")
-@CrossOrigin(origins = "*")
 public class SubCatalogController {
 
     private final SubCatalogService subCatalogService;

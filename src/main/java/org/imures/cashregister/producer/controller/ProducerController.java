@@ -16,7 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1/producer")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class ProducerController {
 
     private final ProducerService producerService;

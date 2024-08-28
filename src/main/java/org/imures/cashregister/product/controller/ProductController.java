@@ -26,7 +26,6 @@ import java.util.Base64;
 @RestController
 @RequestMapping("api/v1/product")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class ProductController {
 
     private final ProductService productService;

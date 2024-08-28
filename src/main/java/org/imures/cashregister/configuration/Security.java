@@ -3,6 +3,7 @@ package org.imures.cashregister.configuration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,6 +30,14 @@ public class Security{
                                 auth
                                         .requestMatchers("api/v1/user/**")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "api/v1/catalog/**")
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "api/v1/sub-catalog/**")
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "api/v1/producer/**")
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "api/v1/product/**")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated()
                 )
@@ -41,7 +50,7 @@ public class Security{
   //                .formLogin(form ->
   //                        form.loginPage("/login")
   //                                .permitAll())
-//                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 //                .authenticationProvider(authenticationProvider)
 //                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
