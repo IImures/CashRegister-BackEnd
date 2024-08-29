@@ -109,4 +109,13 @@ public class UserService{
                 .refreshToken(refreshedToken)
                 .build();
     }
+
+    public void validate(String token) {
+        String userMail = jwtService.extractUsername(token);
+        User user = userRepository.findUserByEmail(userMail)
+                .orElseThrow(()-> new UsernameNotFoundException("User does not exists"));
+        if(!jwtService.isTokenValid(token, user)){
+            throw new BadCredentialsException("Invalid token");
+        }
+    }
 }
