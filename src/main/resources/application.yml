@@ -15,13 +15,13 @@ spring:
           hibernate:
               format_sql: true
 
-#server:
-#    port: 8000
 
 application:
     security:
         jwt:
-            secret-key: E6E7E7D8C1CC9F4E6A63B6E976145E6E7E7D8C1CC9F4E6A63B6E976145
-            refresh-secret-key: E6E7E7D8C1CC9F4E6A32AEBBBB145E6E7E7D8C1CC9F4E6A63B6E976141
-            expiration-time: 10000 #300000
+            secret-key: <key>
+            refresh-secret-key: <refresh-key>
+            expiration-time: 300000
             refresh-expiration-time: 120000000
+        cors:
+            allowed-origin: <allowed origin>

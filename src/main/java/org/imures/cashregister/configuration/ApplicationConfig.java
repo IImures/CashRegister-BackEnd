@@ -2,6 +2,7 @@ package org.imures.cashregister.configuration;
 
 import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.users.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +19,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
+
+    @Value("${application.security.cors.allowed-origin}")
+    private String ALLOWED_ORIGIN;
 
     private final UserRepository userRepository;
 
@@ -51,8 +55,7 @@ public class ApplicationConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://172.17.0.1")
-//                        .allowedOrigins("*")
+                        .allowedOrigins(ALLOWED_ORIGIN)
                         .allowedMethods("GET", "POST", "PUT", "DELETE")
                         .allowedHeaders("*")
                         .allowCredentials(true);

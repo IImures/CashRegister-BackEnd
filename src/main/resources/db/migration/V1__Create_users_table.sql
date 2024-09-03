@@ -4,5 +4,5 @@ create table user_tab ( -- name 'user' is preserved so -> user_tab
                           password varchar(255) not null,
                           is_enabled boolean not null,
                           primary key (id)
-)
+);
 
