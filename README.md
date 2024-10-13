@@ -1,6 +1,6 @@
 # СashRegister Backend
 
-This is a backend part of a project created for a buissines selling Cashregisters, made in order to help the firm advertise their services, publish posts, and easily manage client requests.
+This is a backend part of a project created for a business selling Cashregisters, made in order to help the firm advertise their services, publish posts, and easily manage client requests.
 
 ## Table of Contents
 
