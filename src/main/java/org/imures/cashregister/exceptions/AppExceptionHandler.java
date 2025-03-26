@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 
 @ControllerAdvice
@@ -27,6 +28,15 @@ public class AppExceptionHandler {
     @ExceptionHandler(value = {NullValueException.class})
     public ResponseEntity<Object> handleNullValueException(NullValueException ex) {
         logger.error("NullValueException: {}", ex.getMessage());
+        return new ResponseEntity<>(
+                new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(value = {IOException.class})
+    public ResponseEntity<Object> handleIOException(IOException ex) {
+        logger.error("IOException: {}", ex.getMessage());
         return new ResponseEntity<>(
                 new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
                 HttpStatus.BAD_REQUEST

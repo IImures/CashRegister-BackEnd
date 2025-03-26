@@ -14,6 +14,7 @@ import org.imures.cashregister.catalog.repository.CatalogRepository;
 import org.imures.cashregister.catalog.repository.SubCatalogTypeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,8 +106,10 @@ public class CatalogService
 
     @Transactional(readOnly = true)
     public List<CatalogResponse> getAllCatalogs() {
-        List<Catalog> catalogs = catalogRepository.findAll();
-        return catalogs.stream().map(catalogMapper::fromEntityToResponse).collect(Collectors.toList());
+        List<Catalog> catalogs = catalogRepository.findAll(Sort.by("id"));
+        return catalogs.stream()
+                .map(catalogMapper::fromEntityToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional

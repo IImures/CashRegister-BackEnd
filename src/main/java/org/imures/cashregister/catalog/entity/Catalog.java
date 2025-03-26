@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(name ="catalog")
 @Getter
@@ -20,7 +20,7 @@ public class Catalog
     private String catalogName;
 
     @OneToMany(mappedBy = "catalog", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<SubCatalog> subCatalogs = new HashSet<>();
+    private List<SubCatalog> subCatalogs = new ArrayList<>();
 
     public void addSubCatalog(SubCatalog subCatalog){
         subCatalogs.add(subCatalog);

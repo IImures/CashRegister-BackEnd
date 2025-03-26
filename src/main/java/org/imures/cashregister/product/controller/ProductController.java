@@ -87,14 +87,6 @@ public class ProductController {
         return new ResponseEntity<>(productService.getProductById(productId), HttpStatus.OK);
     }
 
-//    @PostMapping
-//    public ResponseEntity<ProductResponse> createProduct(
-//            @RequestBody @Valid ProductRequest productRequest, Errors errors
-//    ) {
-//        if(errors.hasErrors()) throw new NullValueException(errors.getAllErrors().get(0).getDefaultMessage());
-//        return new ResponseEntity<>(productService.createProduct(productRequest), HttpStatus.CREATED);
-//    }
-
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
             @RequestBody @Valid ProductRequest productRequest, Errors errors
@@ -112,11 +104,11 @@ public class ProductController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(path = "{productId}/image")
-    public ResponseEntity<String> getImage(
+    @GetMapping(path = "{productId}/image", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getImage(
             @PathVariable Long productId
     ) {
-        return getBase64Image(productService.getImageBytes(productId));
+        return new ResponseEntity<>(productService.getImageBytes(productId), HttpStatus.OK);
     }
 
     @DeleteMapping(path = "/{productId}")
@@ -142,14 +134,6 @@ public class ProductController {
         return new ResponseEntity<>(productService.getProductDescription(id), HttpStatus.OK);
     }
 
-//    @PostMapping(path = "{id}/description")
-//    public ResponseEntity<ProductDescriptionResponse> createProductDescription(
-//            @PathVariable Long id,
-//            @RequestBody @Valid ProductDescriptionRequest request, Errors errors
-//            ){
-//        if(errors.hasErrors()) throw new NullValueException(errors.getAllErrors().get(0).getDefaultMessage());
-//        return new ResponseEntity<>(productService.createProductDescription(id, request), HttpStatus.CREATED);
-//    }
 
     @PutMapping(path = "{productId}/description/image")
     public ResponseEntity<Void> addProductDescriptionImage(

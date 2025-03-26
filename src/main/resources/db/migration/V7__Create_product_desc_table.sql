@@ -1,4 +1,4 @@
-create table product_description (
+create table  if not exists product_description (
                         id bigserial not null,
                         description TEXT not null,
                         characteristics TEXT not null,

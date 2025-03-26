@@ -1,4 +1,4 @@
-create table producer (
+create table  if not exists producer (
         id bigserial not null,
         edrpou varchar(255) not null,
         producer_name varchar(255) not null,

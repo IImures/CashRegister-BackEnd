@@ -1,4 +1,4 @@
-create table product_image (
+create table  if not exists product_image (
                                id bigserial not null,
                                image_data oid not null,
                                name varchar(255) not null,

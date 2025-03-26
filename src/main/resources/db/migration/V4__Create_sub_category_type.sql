@@ -1,4 +1,4 @@
-create table sub_catalog_type (
+create table  if not exists sub_catalog_type (
                                   id bigserial not null,
                                   type varchar(255) not null,
                                   primary key (id)
