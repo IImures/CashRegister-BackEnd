@@ -1,5 +1,6 @@
 package org.imures.cashregister.users.controller;
 
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.imures.cashregister.users.controller.request.AuthenticationRequest;
 import org.imures.cashregister.users.controller.request.UserRequest;
@@ -8,6 +9,7 @@ import org.imures.cashregister.users.service.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> createUser(
             @RequestBody UserRequest request
@@ -31,6 +34,7 @@ public class UserController {
         return new ResponseEntity<>(userService.authenticate(request), HttpStatus.OK);
     }
 
+    @PermitAll
     @PostMapping("/refresh")
     public ResponseEntity<AuthenticationResponse> refresh(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken

@@ -1,6 +1,5 @@
 package org.imures.cashregister.configuration;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -25,48 +25,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
-
-        if ("/api/v1/user/refresh".equals(request.getRequestURI())) {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+        if (!hasAuthorizationBearer(request)) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userLogin;
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String token = getAccessToken(request);
+        if (!jwtService.validateJwtToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
-        try {
-            jwt = authHeader.substring(7); //from 7 because "Bearer " length is 7
-            userLogin = jwtService.extractUsername(jwt);
-            if (userLogin != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userLogin);
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-            filterChain.doFilter(request,response);
-        } catch (ExpiredJwtException e){
-            logger.warn("Expired JWT Token for request: {}", request.getRequestURI());
-        }
+        setAuthenticationContext(token, request);
+        filterChain.doFilter(request, response);
+    }
 
+    private void setAuthenticationContext(String token, HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(token);
+        UsernamePasswordAuthenticationToken
+                authentication = new UsernamePasswordAuthenticationToken(userDetails.getUsername(),
+                null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private UserDetails getUserDetails(String token) {
+        String[] jwtSubject = jwtService.getSubject(token).split(",");
+        return userDetailsService.loadUserByUsername(jwtSubject[0]);
+    }
+
+    private boolean hasAuthorizationBearer(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return !ObjectUtils.isEmpty(header) && header.startsWith("Bearer");
+    }
+
+    private String getAccessToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return header.split(" ")[1].trim();
     }
 }

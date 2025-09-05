@@ -1,24 +1,25 @@
 package org.imures.cashregister.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
+@Slf4j
 @ControllerAdvice
 public class AppExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(AppExceptionHandler.class);
 
     @ExceptionHandler(value = {EntityNotFoundException.class})
-    public ResponseEntity<Object> handleNotFoundException(EntityNotFoundException ex) {
-        logger.error("EntityNotFoundException: {}", ex.getMessage());
+    public ResponseEntity<ErrorMessage> handleNotFoundException(EntityNotFoundException ex) {
+        log.error("EntityNotFoundException: {}", ex.getMessage());
         return new ResponseEntity<>(
                 new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
                 HttpStatus.NOT_FOUND
@@ -26,8 +27,8 @@ public class AppExceptionHandler {
     }
 
     @ExceptionHandler(value = {NullValueException.class})
-    public ResponseEntity<Object> handleNullValueException(NullValueException ex) {
-        logger.error("NullValueException: {}", ex.getMessage());
+    public ResponseEntity<ErrorMessage> handleNullValueException(NullValueException ex) {
+        log.error("NullValueException: {}", ex.getMessage());
         return new ResponseEntity<>(
                 new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
                 HttpStatus.BAD_REQUEST
@@ -35,17 +36,39 @@ public class AppExceptionHandler {
     }
 
     @ExceptionHandler(value = {IOException.class})
-    public ResponseEntity<Object> handleIOException(IOException ex) {
-        logger.error("IOException: {}", ex.getMessage());
+    public ResponseEntity<ErrorMessage> handleIOException(IOException ex) {
+        log.error("IOException: {}", ex.getMessage());
         return new ResponseEntity<>(
                 new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
                 HttpStatus.BAD_REQUEST
         );
     }
 
+    @ExceptionHandler(value = { NoResourceFoundException.class })
+    public ResponseEntity<ErrorMessage> handleException(
+            final NoResourceFoundException ex
+    ) {
+        log.info("NoResourceFoundException: {}", ex.getMessage());
+        return new ResponseEntity<>(
+                new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(value = { AuthorizationDeniedException.class })
+    public ResponseEntity<ErrorMessage> handleException(
+            final AuthorizationDeniedException ex
+    ) {
+        log.warn("AuthorizationDeniedException: {}", ex.getMessage());
+        return new ResponseEntity<>(
+                new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
+                HttpStatus.UNAUTHORIZED
+        );
+    }
+
     @ExceptionHandler(value = {Exception.class})
-    public ResponseEntity<Object> handleAllExceptions(Exception ex) {
-        logger.error("Exception: {}", ex.getMessage());
+    public ResponseEntity<ErrorMessage> handleAllExceptions(Exception ex) {
+        log.error("Exception: {}", ex.getMessage());
         return new ResponseEntity<>(
                 new ErrorMessage(OffsetDateTime.now(), ex.getMessage()),
                 HttpStatus.BAD_REQUEST

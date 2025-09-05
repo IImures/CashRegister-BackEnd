@@ -1,7 +1,9 @@
 package org.imures.cashregister.users.service;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.imures.cashregister.configuration.JwtService;
 import org.imures.cashregister.roles.entity.Role;
 import org.imures.cashregister.roles.repository.RoleRepository;
@@ -14,17 +16,24 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
-public class UserService{
+public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -34,15 +43,15 @@ public class UserService{
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public AuthenticationResponse createUser(UserRequest details){
+    public AuthenticationResponse createUser(UserRequest details) {
         boolean isExists = true;
         try {
             userRepository.findUserByEmail(details.getEmail())
-                    .orElseThrow(()-> new RuntimeException("User does not exists"));
-        } catch (RuntimeException e){
+                    .orElseThrow(() -> new RuntimeException("User does not exists"));
+        } catch (RuntimeException e) {
             isExists = false;
         }
-        if(isExists) throw new RuntimeException("User already exists with this login");
+        if (isExists) throw new RuntimeException("User already exists with this login");
 
         User newUser = new User();
 
@@ -51,11 +60,11 @@ public class UserService{
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 
         Set<Role> roles = new HashSet<>();
-        for(Long roleId : details.getRoles()){
+        for (Long roleId : details.getRoles()) {
             roles.add(
                     roleRepository
                             .findById(roleId)
-                            .orElseThrow(()-> new RuntimeException("Role " + roleId + " does not exists!"))
+                            .orElseThrow(() -> new EntityNotFoundException("Role " + roleId + " does not exists!"))
             );
         }
 
@@ -65,7 +74,7 @@ public class UserService{
         String jwtToken = jwtService.generateToken(saved);
         String refreshToken = jwtService.generateRefreshToken(saved);
 
-        return  AuthenticationResponse.builder()
+        return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -73,49 +82,65 @@ public class UserService{
 
     @Transactional(readOnly = true)
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
+        Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getLogin(),
                         request.getPassword()
                 )
         );
 
-        User user = userRepository.findUserByEmail(request.getLogin())
-                .orElseThrow(()-> new UsernameNotFoundException("User was not found"));
+        List<String> roles = auth.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
 
-        String jwtToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("roles", roles);
 
-        return  AuthenticationResponse.builder()
-                .token(jwtToken)
+        String token = jwtService.generateToken(claims, (UserDetails) auth.getPrincipal());
+        String refreshToken = jwtService.generateRefreshToken((UserDetails) auth.getPrincipal());
+
+        log.info("User authenticated: {} ", ((UserDetails) auth.getPrincipal()).getUsername());
+        return AuthenticationResponse.builder()
+                .token(token)
                 .refreshToken(refreshToken)
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public AuthenticationResponse refresh(String token) {
-        String userMail = jwtService.extractRefreshedUsername(token);
+    public AuthenticationResponse refresh(String refreshToken) {
+        String userMail = jwtService.getRefreshSubject(refreshToken);
         User user = userRepository.findUserByEmail(userMail)
-                .orElseThrow(()-> new UsernameNotFoundException("User does not exists"));
+                .orElseThrow(() -> new UsernameNotFoundException("User does not exists"));
 
-        if(!jwtService.isRefreshTokenValid(token, user)){
+        if (!jwtService.validateJwtRefreshToken(refreshToken)) {
             throw new BadCredentialsException("Invalid token");
         }
-        String jwtToken = jwtService.generateToken(user);
-        String refreshedToken = jwtService.generateRefreshToken(user);
+
+        List<String> roles = user.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("roles", roles);
+
+        String token = jwtService.generateToken(claims, user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+
+        log.info("User refreshed: {} ", user.getUsername());
 
         return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .refreshToken(refreshedToken)
+                .token(token)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 
     public void validate(String token) {
-        String userMail = jwtService.extractUsername(token);
-        User user = userRepository.findUserByEmail(userMail)
-                .orElseThrow(()-> new UsernameNotFoundException("User does not exists"));
-        if(!jwtService.isTokenValid(token, user)){
+        if (!jwtService.validateJwtToken(token)) {
+            log.warn("User not authenticated: {}", jwtService.getSubject(token));
             throw new BadCredentialsException("Invalid token");
         }
+        log.info("User validated: {} ", jwtService.getSubject(token));
     }
 }

@@ -1,4 +1,6 @@
 spring:
+    config:
+        import: optional:classpath:.env[.properties]
     application:
         name: cashregister
     datasource:
@@ -9,19 +11,21 @@ spring:
     jpa:
         open-in-view: true
         hibernate:
-            ddl-auto: update
-        show-sql: true
+            ddl-auto: validate
+        show-sql: false
         properties:
           hibernate:
               format_sql: true
+    flyway:
+        baseline-on-migrate: true
 
 
 application:
     security:
         jwt:
-            secret-key: <key>
-            refresh-secret-key: <refresh-key>
-            expiration-time: 300000
-            refresh-expiration-time: 120000000
+            secret-key: ${SECRET_KEY}
+            refresh-secret-key: ${REFRESH_SECRET_KEY}
+            expiration-time: ${EXPIRATION_TIME}
+            refresh-expiration-time: ${REFRESH_EXPIRATION_TIME}
         cors:
-            allowed-origin: <allowed origin>
+            allowed-origin: ${ALLOWED_ORIGIN}
